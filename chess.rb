@@ -21,6 +21,7 @@ class Chess
       get_user_move
 
       current_player = current_player == player1 ? player2 : player1
+    end
   end
 
 end
@@ -51,10 +52,15 @@ class Player
 end
 
 class Board
+
   def initialize(player1, player2)
     @player1 = player1
     @player2 = player2
     build_board
+  end
+
+  def [](row)
+    @grid[row]
   end
 
   def build_board
@@ -62,27 +68,28 @@ class Board
 
     [1, 6].each do |row|
       (0..7).each do |col|
-      @grid[row][col] = Pawn.new(self, player1, [row, col]) if row == 1
-      @grid[row][col] = Pawn.new(self, player2, [row, col]) if row == 6
+        @grid[row][col] = Pawn.new(self, @player1, [row, col]) if row == 1
+        @grid[row][col] = Pawn.new(self, @player2, [row, col]) if row == 6
+      end
     end
+    @grid[0][0] = Rook.new(self, @player1, [0, 0])
+    @grid[0][1] = Knight.new(self, @player1, [0, 1])
+    @grid[0][2] = Bishop.new(self, @player1, [0, 2])
+    @grid[0][3] = Queen.new(self, @player1, [0, 3])
+    @grid[0][4] = King.new(self, @player1, [0, 4])
+    @grid[0][5] = Bishop.new(self, @player1, [0, 5])
+    @grid[0][6] = Knight.new(self, @player1, [0, 6])
+    @grid[0][7] = Rook.new(self, @player1, [0, 7])
 
-    @grid[0][0] = Rook.new(self, player1, [0, 0])
-    @grid[0][1] = Knight.new(self, player1, [0, 1])
-    @grid[0][2] = Bishop.new(self, player1, [0, 2])
-    @grid[0][3] = Queen.new(self, player1, [0, 3])
-    @grid[0][4] = King.new(self, player1, [0, 4])
-    @grid[0][5] = Bishop.new(self, player1, [0, 5])
-    @grid[0][6] = Knight.new(self, player1, [0, 6])
-    @grid[0][7] = Rook.new(self, player1, [0, 7])
 
-    @grid[7][0] = Rook.new(self, player2, [7, 0])
-    @grid[7][1] = Knight.new(self, player2, [7, 1])
-    @grid[7][2] = Bishop.new(self, player2, [7, 2])
-    @grid[7][3] = Queen.new(self, player2, [7, 3])
-    @grid[7][4] = King.new(self, player2, [7, 4])
-    @grid[7][5] = Bishop.new(self, player2, [7, 5])
-    @grid[7][6] = Knight.new(self, player2, [7, 6])
-    @grid[7][7] = Rook.new(self, player2, [7, 7])
+    @grid[7][0] = Rook.new(self, @player2, [7, 0])
+    @grid[7][1] = Knight.new(self, @player2, [7, 1])
+    @grid[7][2] = Bishop.new(self, @player2, [7, 2])
+    @grid[7][3] = Queen.new(self, @player2, [7, 3])
+    @grid[7][4] = King.new(self, @player2, [7, 4])
+    @grid[7][5] = Bishop.new(self, @player2, [7, 5])
+    @grid[7][6] = Knight.new(self, @player2, [7, 6])
+    @grid[7][7] = Rook.new(self, @player2, [7, 7])
   end
 
   def move_piece(start_position, end_position)
@@ -102,6 +109,11 @@ class Board
     else
       puts "That is an invalid move."
     end #if
+  end
+
+  def self.on_board?(position)
+    row, col = position
+    row >= 0 && row < 8 && col >= 0 && col < 8
   end
 
 end
@@ -127,19 +139,38 @@ class Piece
   def non_check_moves
   end
 
-  def valid_move?
+  def valid_move?(end_position)
+    non_check_moves.include?(end_position)
   end
 end
 
 class Pawn < Piece
   def initialize(board, player, position)
-    super(board, player, postion)
+    super(board, player, position)
     @original_position = position
     @orientation = (@original_position.first == 1) ? :top : :bottom
   end
 
   def poss_moves
+    orow, ocol = @original_position
+    row, col = @position
+    moves = []
 
+    drow = 1 if @orientation == :top
+    drow = -1 if @orientation == :bottom
+
+    moves << [row + drow, col] if @board[row + drow][col].nil?
+
+    moves << [row + 2 * drow, col] if orow == row && @board[row + 2 * drow][col].nil? && @board[row + drow][col].nil?
+
+    unless @board[row + drow][col + 1].nil? || @board[row + drow][col + 1].player == player
+      moves << [row + drow, col + 1]
+    end
+    unless @board[row + drow][col - 1].nil? || @board[row + drow][col - 1].player == player
+      moves << [row + drow, col - 1]
+    end
+
+    moves.select {|position| Board.on_board?(position)}
   end
 end
 
@@ -150,6 +181,25 @@ class Bishop < Piece
 end
 
 class Knight < Piece
+  def poss_moves
+    row, col = @position
+    moves = []
+
+    [-2, -1, 1, 2].each do |drow|
+      [-2, -1, 1, 2].each do |dcol|
+        next if drow.abs == dcol.abs
+        moves << [row + drow, col + dcol]
+      end
+    end
+
+    moves.select! {|move| Board.on_board?(move)}
+    moves.delete_if do |move|
+      move_row, move_col = move
+      !@board[move_row][move_col].nil? && @board[move_row][move_col].player == @player
+    end
+
+    moves
+  end
 end
 
 class Queen < Piece
@@ -157,4 +207,7 @@ end
 
 class King < Piece
 end
+
+my_board = Board.new(Player.new(:white), Player.new(:black))
+p my_board[7][1].poss_moves
 
