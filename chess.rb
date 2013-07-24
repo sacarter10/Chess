@@ -81,7 +81,6 @@ class Board
     @grid[0][6] = Knight.new(self, @player1, [0, 6])
     @grid[0][7] = Rook.new(self, @player1, [0, 7])
 
-
     @grid[7][0] = Rook.new(self, @player2, [7, 0])
     @grid[7][1] = Knight.new(self, @player2, [7, 1])
     @grid[7][2] = Bishop.new(self, @player2, [7, 2])
@@ -175,6 +174,30 @@ class Pawn < Piece
 end
 
 class Rook < Piece
+  def poss_moves
+    moves = []
+
+    [[-1, 0], [1, 0], [0, -1], [0, 1]].each do |drow, dcol|
+      new_row = @position.first + drow
+      new_col = @position.last + dcol
+
+      next unless Board.on_board?([new_row, new_col])
+
+      # the loop will stop at the last square that's still on the board, on top of an enemy piece
+      # or on top of a friendly piece
+      while @board[new_row][new_col].nil? && Board.on_board?([new_row + drow, new_col + dcol])
+        moves << [new_row, new_col]
+        new_row += drow
+        new_col += dcol
+      end
+
+      if @board[new_row][new_col].nil? || @board[new_row][new_col].player != @player
+        moves << [new_row, new_col]
+      end
+    end
+
+    moves
+  end
 end
 
 class Bishop < Piece
@@ -193,9 +216,9 @@ class Knight < Piece
     end
 
     moves.select! {|move| Board.on_board?(move)}
-    moves.delete_if do |move|
+    moves.select! do |move|
       move_row, move_col = move
-      !@board[move_row][move_col].nil? && @board[move_row][move_col].player == @player
+      @board[move_row][move_col].nil? || @board[move_row][move_col].player != player
     end
 
     moves
@@ -206,8 +229,26 @@ class Queen < Piece
 end
 
 class King < Piece
+  def poss_moves
+    row, col = @position
+    moves = []
+
+    [-1, 0, 1].each do |drow|
+      [-1, 0, 1].each do |dcol|
+        next if drow == 0 && dcol == 0
+        moves << [row + drow, col + dcol]
+      end
+    end
+
+    moves.select! {|move| Board.on_board?(move)}
+    moves.select! do |move|
+      move_row, move_col = move
+      @board[move_row][move_col].nil? || @board[move_row][move_col].player != player
+    end
+
+    moves
+  end
 end
 
 my_board = Board.new(Player.new(:white), Player.new(:black))
-p my_board[7][1].poss_moves
-
+p my_board[7][0].poss_moves
