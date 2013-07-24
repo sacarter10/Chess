@@ -58,9 +58,10 @@ class Board
       @grid[end_row][end_col] = @grid[start_row][start_col]
       @grid[end_row][end_col].position = [end_row, end_col]
       @grid[start_row][start_col] = nil
+      return true
     else
-      puts "That is an invalid move."
-    end #if
+      return false
+    end
   end
 
   #this allows us to make moves that put us in check. used in non_check_moves method

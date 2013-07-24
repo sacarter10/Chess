@@ -34,7 +34,7 @@ class Player
     opponents_moves.include?(our_king_position)
   end
 
-  def game_over?
+  def game_over
     #are there any legal moves? && self.check?
     if @available_pieces.all? { |piece| piece.non_check_moves.empty? }
       check? ? "checkmate" : "draw"
