@@ -1,3 +1,5 @@
+require 'yaml'
+
 class Chess
 
   def run
@@ -52,6 +54,7 @@ class Player
 end
 
 class Board
+  attr_reader :player1, :player2
 
   def initialize(player1, player2)
     @player1 = player1
@@ -68,6 +71,7 @@ class Board
 
     [1, 6].each do |row|
       (0..7).each do |col|
+        next if col == 3
         @grid[row][col] = Pawn.new(self, @player1, [row, col]) if row == 1
         @grid[row][col] = Pawn.new(self, @player2, [row, col]) if row == 6
       end
@@ -104,6 +108,28 @@ class Board
       end
 
       @grid[end_row][end_col] = @grid[start_row][start_col]
+      @grid[end_row][end_col].position = [end_row, end_col]
+      @grid[start_row][start_col] = nil
+    else
+      puts "That is an invalid move."
+    end #if
+  end
+
+  #this allows us to make moves that put us in check. used in non_check_moves method
+  def hyp_move_piece(start_position, end_position)
+    start_row, start_col = start_position
+    end_row, end_col = end_position
+
+    current_piece = @grid[start_row][start_col]
+
+    if current_piece.poss_moves.include?(end_position)
+      unless @grid[end_row][end_col] == nil
+        old_piece = @grid[end_row][end_col]
+        old_piece.kill
+      end
+
+      @grid[end_row][end_col] = @grid[start_row][start_col]
+      @grid[end_row][end_col].position = [end_row, end_col]
       @grid[start_row][start_col] = nil
     else
       puts "That is an invalid move."
@@ -113,6 +139,10 @@ class Board
   def self.on_board?(position)
     row, col = position
     row >= 0 && row < 8 && col >= 0 && col < 8
+  end
+
+  def deep_dup
+    YAML.load(self.to_yaml)
   end
 
 end
@@ -136,11 +166,79 @@ class Piece
   end
 
   def non_check_moves
+    non_suicidal = poss_moves.select do |move|
+      new_board = @board.deep_dup
+
+      new_board.hyp_move_piece(@position, move)
+      our_player = @player.color == new_board.player1.color ? new_board.player1 : new_board.player2
+      opponent = our_player == new_board.player1 ? new_board.player2 : new_board.player1
+
+      opponents_moves = []
+
+      opponent.available_pieces.each do |piece|
+        opponents_moves += piece.poss_moves
+      end
+
+      p opponents_moves
+
+      our_king_position = nil
+
+      our_player.available_pieces.each do |piece|
+        if piece.is_a? King
+          our_king_position = piece.position
+        end
+      end
+
+      p our_king_position
+
+      if opponents_moves.include? our_king_position
+        false
+      else
+        true
+      end
+    end
+    non_suicidal
   end
 
   def valid_move?(end_position)
     non_check_moves.include?(end_position)
   end
+end
+
+# Should this be a module called Slideable???
+class SlidingPiece < Piece
+  def initialize(board, player, positions)
+    super(board, player, positions)
+  end
+
+  def poss_moves
+    moves = []
+
+    @directions.each do |drow, dcol|
+      new_row = @position.first + drow
+      new_col = @position.last + dcol
+
+      next unless Board.on_board?([new_row, new_col])
+
+      # the loop will stop at the last square that's still on the board, on top of an enemy piece
+      # or on top of a friendly piece
+      while @board[new_row][new_col].nil? && Board.on_board?([new_row + drow, new_col + dcol])
+        moves << [new_row, new_col]
+        new_row += drow
+        new_col += dcol
+      end
+
+      if @board[new_row][new_col].nil? || @board[new_row][new_col].player != @player
+        moves << [new_row, new_col]
+      end
+    end
+
+    moves
+  end
+end
+
+class SteppingPiece < Piece
+
 end
 
 class Pawn < Piece
@@ -173,37 +271,21 @@ class Pawn < Piece
   end
 end
 
-class Rook < Piece
-  def poss_moves
-    moves = []
-
-    [[-1, 0], [1, 0], [0, -1], [0, 1]].each do |drow, dcol|
-      new_row = @position.first + drow
-      new_col = @position.last + dcol
-
-      next unless Board.on_board?([new_row, new_col])
-
-      # the loop will stop at the last square that's still on the board, on top of an enemy piece
-      # or on top of a friendly piece
-      while @board[new_row][new_col].nil? && Board.on_board?([new_row + drow, new_col + dcol])
-        moves << [new_row, new_col]
-        new_row += drow
-        new_col += dcol
-      end
-
-      if @board[new_row][new_col].nil? || @board[new_row][new_col].player != @player
-        moves << [new_row, new_col]
-      end
-    end
-
-    moves
+class Rook < SlidingPiece
+  def initialize(board, player, position)
+    @directions = [[-1, 0], [1, 0], [0, -1], [0, 1]]
+    super(board, player, position)
   end
 end
 
-class Bishop < Piece
+class Bishop < SlidingPiece
+  def initialize(board, player, position)
+    @directions = [[-1, -1], [1, 1], [1, -1], [-1, 1]]
+    super(board, player, position)
+  end
 end
 
-class Knight < Piece
+class Knight < SteppingPiece
   def poss_moves
     row, col = @position
     moves = []
@@ -225,10 +307,14 @@ class Knight < Piece
   end
 end
 
-class Queen < Piece
+class Queen < SlidingPiece
+  def initialize(board, player, position)
+    @directions = [[-1, -1], [1, 1], [1, -1], [-1, 1], [-1, 0], [1, 0], [0, -1], [0, 1]]
+    super(board, player, position)
+  end
 end
 
-class King < Piece
+class King < SteppingPiece
   def poss_moves
     row, col = @position
     moves = []
@@ -251,4 +337,6 @@ class King < Piece
 end
 
 my_board = Board.new(Player.new(:white), Player.new(:black))
-p my_board[7][0].poss_moves
+my_board.move_piece([0, 4], [1, 3])
+p my_board[0][4].class
+p my_board[1][3].class
