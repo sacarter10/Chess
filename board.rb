@@ -19,7 +19,6 @@ class Board
 
     [1, 6].each do |row|
       (0..7).each do |col|
-        next if col == 3
         @grid[row][col] = Pawn.new(self, @player1, [row, col]) if row == 1
         @grid[row][col] = Pawn.new(self, @player2, [row, col]) if row == 6
       end
@@ -85,6 +84,25 @@ class Board
     end #if
   end
 
+  def print_board
+    puts "hello"
+    @grid.each_with_index do |row, row_index|
+      print "#{8 - row_index} |"
+      row.each do |square|
+        if square.nil?
+          print "___"
+        else
+          print "_#{square.to_s}_"
+        end
+        print "|"
+      end
+      puts "\n"
+    end
+    puts
+    puts "    A   B   C   D   E   F   G   H  "
+    puts
+  end
+
   def self.on_board?(position)
     row, col = position
     row >= 0 && row < 8 && col >= 0 && col < 8
@@ -95,5 +113,6 @@ class Board
   end
 
 end
+
 
 #TO_DO add a simpler/custom dup method for Board

@@ -1,3 +1,25 @@
+class String
+  def black;          "\033[30m#{self}\033[0m" end
+  def red;            "\033[31m#{self}\033[0m" end
+  def green;          "\033[32m#{self}\033[0m" end
+  def  brown;         "\033[33m#{self}\033[0m" end
+  def blue;           "\033[34m#{self}\033[0m" end
+  def magenta;        "\033[35m#{self}\033[0m" end
+  def cyan;           "\033[36m#{self}\033[0m" end
+  def gray;           "\033[37m#{self}\033[0m" end
+  def bg_black;       "\033[40m#{self}\0330m"  end
+  def bg_red;         "\033[41m#{self}\033[0m" end
+  def bg_green;       "\033[42m#{self}\033[0m" end
+  def bg_brown;       "\033[43m#{self}\033[0m" end
+  def bg_blue;        "\033[44m#{self}\033[0m" end
+  def bg_magenta;     "\033[45m#{self}\033[0m" end
+  def bg_cyan;        "\033[46m#{self}\033[0m" end
+  def bg_gray;        "\033[47m#{self}\033[0m" end
+  def bold;           "\033[1m#{self}\033[22m" end
+  def reverse_color;  "\033[7m#{self}\033[27m" end
+end
+
+
 class Piece
   attr_accessor :position
   attr_reader :player
@@ -25,28 +47,12 @@ class Piece
       opponent = our_player == new_board.player1 ? new_board.player2 : new_board.player1
 
       !our_player.check?
-
-      # opponents_moves = []
-#
-#       opponent.available_pieces.each do |piece|
-#         opponents_moves += piece.poss_moves
-#       end
-#
-#       our_king_position = nil
-#
-#       our_player.available_pieces.each do |piece|
-#         if piece.is_a? King
-#           our_king_position = piece.position
-#         end
-#       end
-#
-#       if opponents_moves.include? our_king_position
-#         false
-#       else
-#         true
-#       end
     end
     non_suicidal
+  end
+
+  def to_s
+    @player.color == :white ? "#{@string_rep}".gray : "#{@string_rep}".blue
   end
 
   def valid_move?(end_position)
@@ -95,6 +101,7 @@ class Pawn < Piece
     super(board, player, position)
     @original_position = position
     @orientation = (@original_position.first == 1) ? :top : :bottom
+    @string_rep = "p"
   end
 
   def poss_moves
@@ -118,11 +125,14 @@ class Pawn < Piece
 
     moves.select {|position| Board.on_board?(position)}
   end
+
+
 end
 
 class Rook < SlidingPiece
   def initialize(board, player, position)
     @directions = [[-1, 0], [1, 0], [0, -1], [0, 1]]
+    @string_rep = "R"
     super(board, player, position)
   end
 end
@@ -131,10 +141,16 @@ class Bishop < SlidingPiece
   def initialize(board, player, position)
     @directions = [[-1, -1], [1, 1], [1, -1], [-1, 1]]
     super(board, player, position)
+    @string_rep = "B"
   end
 end
 
 class Knight < SteppingPiece
+  def initialize(board, player, position)
+    super(board, player, position)
+    @string_rep = "N"
+  end
+
   def poss_moves
     row, col = @position
     moves = []
@@ -160,10 +176,16 @@ class Queen < SlidingPiece
   def initialize(board, player, position)
     @directions = [[-1, -1], [1, 1], [1, -1], [-1, 1], [-1, 0], [1, 0], [0, -1], [0, 1]]
     super(board, player, position)
+    @string_rep = "Q"
   end
 end
 
 class King < SteppingPiece
+  def initialize(board, player, position)
+    super(board, player, position)
+    @string_rep = "K"
+  end
+
   def poss_moves
     row, col = @position
     moves = []
