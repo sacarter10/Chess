@@ -85,7 +85,6 @@ class Board
   end
 
   def print_board
-    puts "hello"
     @grid.each_with_index do |row, row_index|
       print "#{8 - row_index} |"
       row.each do |square|
