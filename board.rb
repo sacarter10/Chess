@@ -23,6 +23,7 @@ class Board
         @grid[row][col] = Pawn.new(self, @player2, [row, col]) if row == 6
       end
     end
+
     @grid[0][0] = Rook.new(self, @player1, [0, 0])
     @grid[0][1] = Knight.new(self, @player1, [0, 1])
     @grid[0][2] = Bishop.new(self, @player1, [0, 2])
@@ -61,6 +62,25 @@ class Board
     else
       return false
     end
+  end
+
+  def can_move(start_position, end_position)
+    start_row, start_col = start_position
+
+    current_piece = @grid[start_row][start_col]
+
+    possible_moves = current_piece.poss_moves
+
+    unless possible_moves.include?(end_position)
+      raise ArgumentError, "Your piece doesn't move that way."
+    end
+
+    ## needs to have argument of poss moves once redefined
+    unless current_piece.non_check_moves(possible_moves).include?(end_position)
+      raise ArgumentError, "Your piece would be in check in that position."
+    end
+
+
   end
 
   #this allows us to make moves that put us in check. used in non_check_moves method

@@ -38,8 +38,8 @@ class Piece
   def poss_moves
   end
 
-  def non_check_moves
-    non_suicidal = poss_moves.select do |move|
+  def non_check_moves(possible_moves)
+    non_suicidal = possible_moves.select do |move|
       new_board = @board.deep_dup
 
       new_board.hyp_move_piece(@position, move)
@@ -55,9 +55,9 @@ class Piece
     @player.color == :white ? "#{@string_rep}".gray : "#{@string_rep}".blue
   end
 
-  def valid_move?(end_position)
-    non_check_moves.include?(end_position)
-  end
+  # def valid_move?(end_position)
+  #   non_check_moves.include?(end_position)
+  # end
 end
 
 # Should this be a module called Slideable???
@@ -112,20 +112,20 @@ class Pawn < Piece
     drow = 1 if @orientation == :top
     drow = -1 if @orientation == :bottom
 
-    moves << [row + drow, col] if @board[row + drow][col].nil?
+    moves << [row + drow, col] if Board.on_board?([row + drow, col]) && @board[row + drow][col].nil?
 
     moves << [row + 2 * drow, col] if orow == row && @board[row + 2 * drow][col].nil? && @board[row + drow][col].nil?
 
-    unless @board[row + drow][col + 1].nil? || @board[row + drow][col + 1].player == player
-      moves << [row + drow, col + 1]
-    end
-    unless @board[row + drow][col - 1].nil? || @board[row + drow][col - 1].player == player
-      moves << [row + drow, col - 1]
+    [1, -1].each do |dcol|
+      if Board.on_board?([row + drow, col + dcol])
+        unless @board[row + drow][col + dcol].nil? || @board[row + drow][col + dcol].player == player
+          moves << [row + drow, col + dcol]
+        end
+      end
     end
 
-    moves.select {|position| Board.on_board?(position)}
+    moves
   end
-
 
 end
 

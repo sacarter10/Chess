@@ -36,9 +36,9 @@ class ChessGame
     end
 
     if @current_player.game_over == "checkmate"
-      puts "#{@current_player.color} is in checkmate. Game over."
+      puts "#{@current_player.color.to_s.capitalize} is in checkmate. Game over."
     else
-      "#{@current_player.color} has no legal moves. The game is a draw."
+      puts "#{@current_player.color.to_s.capitalize} has no legal moves. The game is a draw."
     end
   end
 
