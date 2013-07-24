@@ -5,9 +5,11 @@ class Chess
   def run
     puts "Welcome to Chess!"
 
-    player1 = Player.new(:white)
-    player2 = Player.new(:black)
     board = Board.new()
+    player1 = Player.new(:white, board)
+    player2 = Player.new(:black, board)
+    board.add_players([player1, player2])
+
 
     current_player = player1
 
@@ -29,19 +31,39 @@ class Chess
 end
 
 class Player
-  attr_reader :color, :available_pieces
+  attr_reader :color, :available_pieces, :board
 
-  def initialize(color)
+  def initialize(color, board)
     @color = color
     @available_pieces = []
+    @board = board
   end
 
   def add_piece(piece)
     @available_pieces << piece
   end
 
+  def get_opponent
+    @opponent ||= @color == @board.player1.color ? @board.player2 : @board.player1
+  end
+
   def check?
-    #do other player's possible moves include my king's position?
+    get_opponent
+    opponents_moves = []
+
+    @opponent.available_pieces.each do |piece|
+      opponents_moves += piece.poss_moves
+    end
+
+    our_king_position = nil
+
+    @available_pieces.each do |piece|
+      if piece.is_a? King
+        our_king_position = piece.position
+      end
+    end
+
+    opponents_moves.include?(our_king_position)
   end
 
   def checkmate?
@@ -56,7 +78,10 @@ end
 class Board
   attr_reader :player1, :player2
 
-  def initialize(player1, player2)
+  def initialize()
+  end
+
+  def add_players(player1, player2)
     @player1 = player1
     @player2 = player2
     build_board
@@ -173,29 +198,27 @@ class Piece
       our_player = @player.color == new_board.player1.color ? new_board.player1 : new_board.player2
       opponent = our_player == new_board.player1 ? new_board.player2 : new_board.player1
 
-      opponents_moves = []
+      !our_player.check?
 
-      opponent.available_pieces.each do |piece|
-        opponents_moves += piece.poss_moves
-      end
-
-      p opponents_moves
-
-      our_king_position = nil
-
-      our_player.available_pieces.each do |piece|
-        if piece.is_a? King
-          our_king_position = piece.position
-        end
-      end
-
-      p our_king_position
-
-      if opponents_moves.include? our_king_position
-        false
-      else
-        true
-      end
+      # opponents_moves = []
+#
+#       opponent.available_pieces.each do |piece|
+#         opponents_moves += piece.poss_moves
+#       end
+#
+#       our_king_position = nil
+#
+#       our_player.available_pieces.each do |piece|
+#         if piece.is_a? King
+#           our_king_position = piece.position
+#         end
+#       end
+#
+#       if opponents_moves.include? our_king_position
+#         false
+#       else
+#         true
+#       end
     end
     non_suicidal
   end
@@ -336,7 +359,7 @@ class King < SteppingPiece
   end
 end
 
-my_board = Board.new(Player.new(:white), Player.new(:black))
-my_board.move_piece([0, 4], [1, 3])
-p my_board[0][4].class
-p my_board[1][3].class
+my_board = Board.new()
+my_board.add_players(Player.new(:white, my_board), Player.new(:black, my_board))
+my_board.move_piece([7, 4], [6, 3])
+
