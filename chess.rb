@@ -2,6 +2,7 @@ require 'yaml'
 require_relative 'piece'
 require_relative 'board'
 require_relative 'player'
+require 'debugger'
 
 class ChessGame
 
@@ -12,6 +13,8 @@ class ChessGame
     @player1 = Player.new(:black, @board)
     @player2 = Player.new(:white, @board)
     @board.add_players(@player1, @player2)
+
+    @board.build_board
 
     @current_player = @player2
     @board.print_board

@@ -2,12 +2,12 @@ class Board
   attr_reader :player1, :player2
 
   def initialize()
+    @grid = Array.new(8) {Array.new(8)}
   end
 
   def add_players(player1, player2)
     @player1 = player1
     @player2 = player2
-    build_board
   end
 
   def [](row)
@@ -15,7 +15,6 @@ class Board
   end
 
   def build_board
-    @grid = Array.new(8) {Array.new(8)}
 
     [1, 6].each do |row|
       (0..7).each do |col|
@@ -103,8 +102,28 @@ class Board
   end
 
   def deep_dup
-    YAML.load(self.to_yaml)
+    new_board = Board.new
+
+    new_player1 = Player.new(@player1.color, new_board)
+    new_player2 = Player.new(@player2.color, new_board)
+
+
+    new_board.add_players(new_player1, new_player2)
+
+    [@player1, @player2].each_with_index do |player, index|
+      new_player = index == 0 ? new_player1 : new_player2
+      player.available_pieces.each do |piece|
+        new_piece = piece.class.new(new_board, new_player, piece.position.dup)
+        new_board[piece.position.first][piece.position.last] = new_piece
+      end
+    end
+
+    new_board
   end
+
+  # def deep_dup
+#    YAML.load(self.to_yaml)
+#   end
 
 end
 
