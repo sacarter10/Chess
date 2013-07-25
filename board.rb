@@ -49,19 +49,16 @@ class Board
 
     current_piece = @grid[start_row][start_col]
 
-    if current_piece.valid_move?(end_position)
-      unless @grid[end_row][end_col] == nil
-        old_piece = @grid[end_row][end_col]
-        old_piece.kill
-      end
 
-      @grid[end_row][end_col] = @grid[start_row][start_col]
-      @grid[end_row][end_col].position = [end_row, end_col]
-      @grid[start_row][start_col] = nil
-      return true
-    else
-      return false
+    unless @grid[end_row][end_col] == nil
+      old_piece = @grid[end_row][end_col]
+      old_piece.kill
     end
+
+    @grid[end_row][end_col] = @grid[start_row][start_col]
+    @grid[end_row][end_col].position = [end_row, end_col]
+    @grid[start_row][start_col] = nil
+
   end
 
   def can_move(start_position, end_position)
@@ -77,31 +74,9 @@ class Board
 
     ## needs to have argument of poss moves once redefined
     unless current_piece.non_check_moves(possible_moves).include?(end_position)
-      raise ArgumentError, "Your piece would be in check in that position."
+      raise ArgumentError, "Your King would be in check in that position."
     end
 
-
-  end
-
-  #this allows us to make moves that put us in check. used in non_check_moves method
-  def hyp_move_piece(start_position, end_position)
-    start_row, start_col = start_position
-    end_row, end_col = end_position
-
-    current_piece = @grid[start_row][start_col]
-
-    if current_piece.poss_moves.include?(end_position)
-      unless @grid[end_row][end_col] == nil
-        old_piece = @grid[end_row][end_col]
-        old_piece.kill
-      end
-
-      @grid[end_row][end_col] = @grid[start_row][start_col]
-      @grid[end_row][end_col].position = [end_row, end_col]
-      @grid[start_row][start_col] = nil
-    else
-      puts "That is an invalid move."
-    end #if
   end
 
   def print_board

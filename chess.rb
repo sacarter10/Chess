@@ -27,9 +27,15 @@ class ChessGame
 
       user_move = get_user_move
 
-      until @board.move_piece(user_move[0], user_move[1])
+      begin
+        @board.can_move(user_move[0], user_move[1])
+      rescue ArgumentError => message
+        puts message
         user_move = get_user_move
+        retry
       end
+
+      @board.move_piece(user_move[0], user_move[1])
 
       @board.print_board
       @current_player = @current_player == @player1 ? @player2 : @player1

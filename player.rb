@@ -36,7 +36,7 @@ class Player
 
   def game_over
     #are there any legal moves? && self.check?
-    if @available_pieces.all? { |piece| piece.non_check_moves.empty? }
+    if @available_pieces.all? { |piece| piece.non_check_moves(piece.poss_moves).empty? }
       check? ? "checkmate" : "draw"
     else
       "continue"

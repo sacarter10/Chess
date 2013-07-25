@@ -42,7 +42,7 @@ class Piece
     non_suicidal = possible_moves.select do |move|
       new_board = @board.deep_dup
 
-      new_board.hyp_move_piece(@position, move)
+      new_board.move_piece(@position, move)
       our_player = @player.color == new_board.player1.color ? new_board.player1 : new_board.player2
       opponent = our_player == new_board.player1 ? new_board.player2 : new_board.player1
 
@@ -55,12 +55,10 @@ class Piece
     @player.color == :white ? "#{@string_rep}".gray : "#{@string_rep}".blue
   end
 
-  # def valid_move?(end_position)
-  #   non_check_moves.include?(end_position)
-  # end
 end
 
 # Should this be a module called Slideable???
+# In order to inherit from SlidingPiece, a class must define a directions array
 class SlidingPiece < Piece
   def initialize(board, player, positions)
     super(board, player, positions)
@@ -90,10 +88,6 @@ class SlidingPiece < Piece
 
     moves
   end
-end
-
-class SteppingPiece < Piece
-
 end
 
 class Pawn < Piece
@@ -145,7 +139,7 @@ class Bishop < SlidingPiece
   end
 end
 
-class Knight < SteppingPiece
+class Knight < Piece
   def initialize(board, player, position)
     super(board, player, position)
     @string_rep = "N"
@@ -180,7 +174,7 @@ class Queen < SlidingPiece
   end
 end
 
-class King < SteppingPiece
+class King < Piece
   def initialize(board, player, position)
     super(board, player, position)
     @string_rep = "K"
