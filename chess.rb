@@ -95,9 +95,4 @@ end
 
 my_game = ChessGame.new()
 my_game.run()
-# my_board = Board.new()
-# my_board.add_players(Player.new(:white, my_board), Player.new(:black, my_board))
-# my_board.move_piece([7, 4], [6, 3])
-#
-# puts my_board[7][4].to_s
 
